@@ -1,0 +1,11 @@
+.env
+.env.production
+.venv/
+__pycache__/
+*.pyc
+*.db
+*.log
+.pytest_cache/
+.mypy_cache/
+backups/
+.DS_Store

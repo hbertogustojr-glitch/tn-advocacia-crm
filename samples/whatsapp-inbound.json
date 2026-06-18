@@ -1,0 +1,11 @@
+{
+  "provider": "whatsapp_cloud_api",
+  "organization_id": 1,
+  "external_contact_id": "5511999999999",
+  "phone_number": "5511999999999",
+  "contact_name": "Maria Silva",
+  "external_message_id": "wamid.test.001",
+  "message_text": "Oi, queria saber como funciona o atendimento",
+  "sent_at": "2026-06-15T10:00:00-03:00"
+}
+

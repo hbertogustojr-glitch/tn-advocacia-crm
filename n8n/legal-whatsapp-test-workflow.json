@@ -1,0 +1,332 @@
+{
+  "id": "LegalWhatsappTestFastApiClaude",
+  "name": "Legal WhatsApp Test - FastAPI Claude",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "legal-whatsapp-test",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-inbound",
+      "name": "Webhook WhatsApp Fake",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        0
+      ],
+      "webhookId": "legal-whatsapp-test"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "provider",
+              "name": "provider",
+              "type": "string",
+              "value": "whatsapp_cloud_api"
+            },
+            {
+              "id": "organization_id",
+              "name": "organization_id",
+              "type": "number",
+              "value": 1
+            },
+            {
+              "id": "external_contact_id",
+              "name": "external_contact_id",
+              "type": "string",
+              "value": "={{ $json.body.external_contact_id || $json.body.phone_number }}"
+            },
+            {
+              "id": "phone_number",
+              "name": "phone_number",
+              "type": "string",
+              "value": "={{ $json.body.phone_number }}"
+            },
+            {
+              "id": "contact_name",
+              "name": "contact_name",
+              "type": "string",
+              "value": "={{ $json.body.contact_name || 'Cliente Teste n8n' }}"
+            },
+            {
+              "id": "external_message_id",
+              "name": "external_message_id",
+              "type": "string",
+              "value": "={{ $json.body.external_message_id || 'n8n-' + Date.now() }}"
+            },
+            {
+              "id": "message_text",
+              "name": "message_text",
+              "type": "string",
+              "value": "={{ $json.body.message_text }}"
+            },
+            {
+              "id": "sent_at",
+              "name": "sent_at",
+              "type": "string",
+              "value": "={{ $json.body.sent_at || new Date().toISOString() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "normalize-payload",
+      "name": "Normalizar payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/webhooks/n8n/whatsapp",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "call-fastapi",
+      "name": "Chamar FastAPI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "reply",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "reply"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "handoff",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "handoff"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "switch-action",
+      "name": "Decidir acao",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "result",
+              "name": "result",
+              "type": "string",
+              "value": "responder_whatsapp"
+            },
+            {
+              "id": "conversation_id",
+              "name": "conversation_id",
+              "type": "number",
+              "value": "={{ $json.conversation_id }}"
+            },
+            {
+              "id": "reply_text",
+              "name": "reply_text",
+              "type": "string",
+              "value": "={{ $json.reply_text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "reply-output",
+      "name": "Resposta automatica",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "result",
+              "name": "result",
+              "type": "string",
+              "value": "encaminhar_humano"
+            },
+            {
+              "id": "conversation_id",
+              "name": "conversation_id",
+              "type": "number",
+              "value": "={{ $json.conversation_id }}"
+            },
+            {
+              "id": "handoff_reason",
+              "name": "handoff_reason",
+              "type": "string",
+              "value": "={{ $json.handoff_reason }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "handoff-output",
+      "name": "Encaminhar humano",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "result",
+              "name": "result",
+              "type": "string",
+              "value": "ignorar"
+            },
+            {
+              "id": "conversation_id",
+              "name": "conversation_id",
+              "type": "number",
+              "value": "={{ $json.conversation_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ignore-output",
+      "name": "Ignorar",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        280
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook WhatsApp Fake": {
+      "main": [
+        [
+          {
+            "node": "Normalizar payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar payload": {
+      "main": [
+        [
+          {
+            "node": "Chamar FastAPI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chamar FastAPI": {
+      "main": [
+        [
+          {
+            "node": "Decidir acao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decidir acao": {
+      "main": [
+        [
+          {
+            "node": "Resposta automatica",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Encaminhar humano",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ignorar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

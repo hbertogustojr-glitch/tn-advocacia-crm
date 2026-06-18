@@ -1,0 +1,17 @@
+{
+  "event": "messages.upsert",
+  "instance": "escritorio",
+  "data": {
+    "key": {
+      "remoteJid": "5511999900001@s.whatsapp.net",
+      "fromMe": false,
+      "id": "EVOLUTION_TEST_001"
+    },
+    "pushName": "Cliente Evolution",
+    "message": {
+      "conversation": "Oi, voces atendem em todo o Brasil?"
+    },
+    "messageTimestamp": 1781596800
+  }
+}
+

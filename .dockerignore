@@ -1,0 +1,13 @@
+.env
+.env.*
+.venv
+__pycache__
+*.pyc
+*.db
+.DS_Store
+.git
+tests
+docs
+samples
+n8n
+sql
