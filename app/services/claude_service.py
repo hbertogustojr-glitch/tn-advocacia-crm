@@ -7,6 +7,7 @@ from anthropic import Anthropic, AnthropicError
 
 from app.core.config import settings
 from app.schemas.whatsapp import AiRoutingDecision
+from app.services.conversation_subject_service import ConversationSubjectService
 
 
 LEGAL_SYSTEM_PROMPT = """
@@ -77,6 +78,7 @@ Schema obrigatorio:
 {
   "acao": "responder",
   "mensagem": "texto da resposta para o cliente",
+  "assunto_conversa": "titulo curto de 3 a 8 palavras",
   "status_conversa": "ativa",
   "motivo_escalonamento": null,
   "resumo_para_advogado": null
@@ -86,6 +88,7 @@ Se precisar encaminhar para humano, use:
 {
   "acao": "escalar",
   "mensagem": null,
+  "assunto_conversa": "titulo curto de 3 a 8 palavras",
   "status_conversa": "aguardando_advogado",
   "motivo_escalonamento": "motivo resumido",
   "resumo_para_advogado": "contexto completo para o advogado agir"
@@ -95,10 +98,17 @@ Se precisar encerrar sem advogado, use:
 {
   "acao": "encerrar",
   "mensagem": "texto curto para encerrar a conversa",
+  "assunto_conversa": "titulo curto de 3 a 8 palavras",
   "status_conversa": "encerrada",
   "motivo_escalonamento": null,
   "resumo_para_advogado": null
 }
+
+Regras para assunto_conversa:
+- Resuma o tema principal em 3 a 8 palavras, por exemplo "Divorcio consensual".
+- Nao use saudacoes como assunto.
+- Nunca inclua CPF, RG, telefone, endereco, numero de processo ou outro dado sensivel.
+- Se ainda nao houver tema alem de uma saudacao, use "Atendimento inicial".
 """
 
 
@@ -127,6 +137,7 @@ class ClaudeService:
                     f"Status CRM: {crm_status}. Mensagem: {message_text}"
                 ),
                 conversation_status="waiting_human",
+                conversation_subject=ConversationSubjectService.from_message(message_text),
                 confidence=0.9,
             )
 
@@ -134,6 +145,7 @@ class ClaudeService:
             return AiRoutingDecision(
                 action="reply",
                 reply_text=self._fallback_reply(client_name, is_first_message, greeting),
+                conversation_subject=ConversationSubjectService.from_message(message_text),
                 confidence=0.55,
             )
 
@@ -165,6 +177,7 @@ class ClaudeService:
             return AiRoutingDecision(
                 action="handoff",
                 handoff_reason="Falha ao consultar o Claude. Atendimento encaminhado para humano.",
+                conversation_subject=ConversationSubjectService.from_message(message_text),
                 confidence=0.5,
             )
 
@@ -172,6 +185,10 @@ class ClaudeService:
         try:
             data = json.loads(self._extract_json_object(raw_text))
             decision = self._parse_decision(data)
+            decision.conversation_subject = ConversationSubjectService.clean(
+                decision.conversation_subject
+                or ConversationSubjectService.from_message(message_text)
+            )
             if decision.reply_text:
                 decision.reply_text = self.clean_reply_text(
                     decision.reply_text,
@@ -183,6 +200,7 @@ class ClaudeService:
                 action="handoff",
                 handoff_reason="Claude retornou uma resposta fora do formato esperado.",
                 lawyer_summary=f"Mensagem do cliente: {message_text}",
+                conversation_subject=ConversationSubjectService.from_message(message_text),
                 confidence=0.6,
             )
 
@@ -205,6 +223,7 @@ class ClaudeService:
                 reply_text=data.get("mensagem"),
                 handoff_reason=data.get("motivo_escalonamento"),
                 lawyer_summary=data.get("resumo_para_advogado"),
+                conversation_subject=data.get("assunto_conversa"),
                 conversation_status=status_map.get(data.get("status_conversa"), "active"),
                 confidence=0.85,
             )

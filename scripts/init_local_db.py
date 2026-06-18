@@ -29,6 +29,13 @@ def main() -> None:
             db.execute(text("ALTER TABLE users ADD COLUMN password_hash VARCHAR(220)"))
             db.commit()
 
+        conversation_columns = {
+            column["name"] for column in inspector.get_columns("conversations")
+        }
+        if "subject" not in conversation_columns:
+            db.execute(text("ALTER TABLE conversations ADD COLUMN subject VARCHAR(220)"))
+            db.commit()
+
         organization = db.scalar(select(Organization).where(Organization.id == 1))
         if not organization:
             db.add(Organization(id=1, name=settings.office_name, status="active"))

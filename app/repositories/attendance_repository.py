@@ -564,7 +564,7 @@ class AttendanceRepository:
                 Client,
                 message_stats.c.message_count,
                 message_stats.c.last_message_at,
-                first_message.body.label("subject"),
+                func.coalesce(Conversation.subject, first_message.body).label("subject"),
             )
             .join(Contact, Conversation.contact_id == Contact.id)
             .outerjoin(Client, Conversation.client_id == Client.id)
@@ -691,6 +691,11 @@ class AttendanceRepository:
         return list(self.db.scalars(stmt).all())
 
     def get_conversation_subject(self, conversation_id: int) -> str | None:
+        conversation_subject = self.db.scalar(
+            select(Conversation.subject).where(Conversation.id == conversation_id)
+        )
+        if conversation_subject:
+            return conversation_subject
         stmt = (
             select(Message.body)
             .where(

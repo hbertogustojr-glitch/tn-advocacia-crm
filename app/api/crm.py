@@ -1255,7 +1255,7 @@ def crm_conversation_detail(
     profile = repository.get_contact_profile(contact.id)
     client = profile[1] if profile else None
     messages = repository.list_messages(conversation_id)
-    subject = next((message.body for message in messages if message.direction == "inbound"), None)
+    subject = repository.get_conversation_subject(conversation.id)
     message_rows = "\n".join(
         f"""
         <article class="message {escape(message.direction)}">

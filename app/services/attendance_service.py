@@ -6,6 +6,7 @@ from app.core.config import settings
 from app.repositories.attendance_repository import AttendanceRepository
 from app.schemas.whatsapp import WhatsAppInboundPayload, WhatsAppAutomationResult
 from app.services.claude_service import ClaudeService
+from app.services.conversation_subject_service import ConversationSubjectService
 from app.services.followup_service import FollowUpService
 from app.services.routing_rules import RoutingRules
 
@@ -49,6 +50,11 @@ class AttendanceService:
             sender_type="client",
             body=payload.message_text,
             sent_at=payload.sent_at,
+        )
+        self._update_conversation_subject(
+            conversation,
+            message_text=payload.message_text,
+            is_first_message=is_first_message,
         )
         self.repository.cancel_scheduled_followups(
             conversation_id=conversation.id,
@@ -123,6 +129,12 @@ class AttendanceService:
             recent_history=self._recent_history(conversation.id),
             conversation_status=self._conversation_status_for_prompt(conversation.status),
             last_interaction=self._last_interaction_for_prompt(conversation.updated_at),
+        )
+        self._update_conversation_subject(
+            conversation,
+            message_text=payload.message_text,
+            suggested_subject=decision.conversation_subject,
+            is_first_message=is_first_message,
         )
         self.repository.create_ai_decision(
             conversation_id=conversation.id,
@@ -203,6 +215,20 @@ class AttendanceService:
         if profile and profile[1]:
             return profile[1].display_name
         return fallback_name
+
+    def _update_conversation_subject(
+        self,
+        conversation,
+        message_text: str,
+        is_first_message: bool,
+        suggested_subject: str | None = None,
+    ) -> None:
+        current_subject = (conversation.subject or "").strip()
+        generic_subjects = {"", "Atendimento inicial"}
+        if suggested_subject and (is_first_message or current_subject in generic_subjects):
+            conversation.subject = ConversationSubjectService.clean(suggested_subject)
+        elif current_subject in generic_subjects:
+            conversation.subject = ConversationSubjectService.from_message(message_text)
 
     def _crm_status(self, contact_id: int, is_first_message: bool) -> str:
         profile = self.repository.get_contact_profile(contact_id)

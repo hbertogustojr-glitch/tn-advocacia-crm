@@ -107,6 +107,7 @@ class Conversation(Base, TimestampMixin):
     client_id: Mapped[Optional[int]] = mapped_column(ForeignKey("clients.id"))
     legal_matter_id: Mapped[Optional[int]] = mapped_column(ForeignKey("legal_matters.id"))
     channel: Mapped[str] = mapped_column(String(24), nullable=False)
+    subject: Mapped[Optional[str]] = mapped_column(String(220))
     status: Mapped[str] = mapped_column(String(32), default="open")
     assigned_user_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"))
 

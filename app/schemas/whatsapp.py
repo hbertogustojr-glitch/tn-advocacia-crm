@@ -27,5 +27,6 @@ class AiRoutingDecision(BaseModel):
     reply_text: str | None = None
     handoff_reason: str | None = None
     lawyer_summary: str | None = None
+    conversation_subject: str | None = Field(default=None, max_length=220)
     conversation_status: Literal["active", "closed", "waiting_human"] = "active"
     confidence: float = Field(ge=0, le=1)
