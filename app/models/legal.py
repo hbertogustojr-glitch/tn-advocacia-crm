@@ -150,7 +150,7 @@ class HandoffRequest(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(IdColumn, primary_key=True, autoincrement=True)
     conversation_id: Mapped[int] = mapped_column(ForeignKey("conversations.id"), nullable=False)
     requested_by_message_id: Mapped[int] = mapped_column(ForeignKey("messages.id"), nullable=False)
-    reason: Mapped[str] = mapped_column(String(500), nullable=False)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(String(32), default="open")
     assigned_user_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"))
     resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime)

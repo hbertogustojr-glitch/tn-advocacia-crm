@@ -130,7 +130,7 @@ CREATE TABLE handoff_requests (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     conversation_id BIGINT UNSIGNED NOT NULL,
     requested_by_message_id BIGINT UNSIGNED NOT NULL,
-    reason VARCHAR(500) NOT NULL,
+    reason TEXT NOT NULL,
     status VARCHAR(32) NOT NULL DEFAULT 'open',
     assigned_user_id BIGINT UNSIGNED NULL,
     resolved_at DATETIME NULL,

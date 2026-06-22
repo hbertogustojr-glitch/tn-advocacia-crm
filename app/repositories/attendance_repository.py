@@ -139,7 +139,7 @@ class AttendanceRepository:
             inbound_message_id=inbound_message_id,
             action=action,
             confidence=confidence,
-            reason=reason,
+            reason=reason[:500] if reason else None,
             model_name=model_name,
         )
         self.db.add(decision)
@@ -156,7 +156,7 @@ class AttendanceRepository:
         handoff = HandoffRequest(
             conversation_id=conversation_id,
             requested_by_message_id=requested_by_message_id,
-            reason=reason,
+            reason=reason[:4000],
             status="open",
             assigned_user_id=assigned_user_id,
         )
