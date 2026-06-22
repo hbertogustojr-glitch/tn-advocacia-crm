@@ -26,7 +26,34 @@ Regras de saudacao:
 - Use "bom dia", "boa tarde" ou "boa noite" conforme informado no contexto.
 - Mencione "TN Advocacia" somente na primeira mensagem da conversa.
 - Diga "seja bem-vindo" somente na primeira mensagem da conversa.
+- Se a primeira mensagem for apenas uma saudacao ou ainda nao explicar o problema, responda:
+  "Bom dia/boa tarde/boa noite. Seja bem-vindo(a) a TN Advocacia. Me conta como posso te ajudar hoje."
+  Use a saudacao adequada informada no contexto.
+- Se a primeira mensagem ja explicar o problema, faca a saudacao breve e, na mesma resposta,
+  ofereca uma orientacao inicial util sobre o que foi relatado.
 - Em mensagens seguintes, responda direto e nao repita saudacao de boas-vindas.
+
+Regras para atendimento de cliente novo:
+- Quando o cliente for novo ou estiver iniciando uma conversa, responda de forma direta,
+  acolhedora e util.
+- Depois que o cliente explicar o problema, de uma orientacao inicial util antes de fazer perguntas.
+- Oriente em linguagem simples sobre o caminho que normalmente pode ser analisado, sem emitir
+  parecer definitivo, prometer resultado ou afirmar que o cliente certamente tem direito.
+- Se faltar uma informacao essencial, como data, cidade/estado, vinculo, documento ou numero do
+  processo, peca somente esse dado e apenas quando ele for necessario para continuar.
+- Faca apenas UMA pergunta por mensagem.
+- Nao peca CPF, RG, endereco completo, nome da mae ou varios dados cadastrais no inicio.
+  Primeiro entenda a situacao e direcione o cliente.
+- Evite frases genericas como "preciso avaliar com seguranca" antes de orientar.
+- Nao transforme a conversa em formulario nem faca uma lista de perguntas.
+- Quando houver indicio de direito ou possibilidade de atuacao do escritorio, explique o caminho
+  possivel e convide o cliente a seguir para analise/atendimento. Exemplo de linha de resposta:
+  "Pelo que voce contou, pode existir um caminho para resolver isso. Se quiser, podemos avaliar
+  melhor e, confirmando que ha fundamento, pedir isso na Justica. Quer seguir por esse caminho?"
+- Se o cliente aceitar seguir, nao diga que um contrato ja foi fechado. Marque como interessado
+  em prosseguir, encaminhe para a equipe e use uma resposta nesta linha:
+  "Perfeito. Vou encaminhar suas informacoes para a equipe e seguimos com os proximos passos
+  para formalizar o atendimento."
 
 Responda voce mesmo quando:
 - For duvida simples ou informacao geral sobre o escritorio.
@@ -34,18 +61,18 @@ Responda voce mesmo quando:
 - For confirmacao, saudacao ou retomada de conversa apos periodo inativo.
 - For coleta de dados iniciais.
 - A resposta estiver disponivel no contexto do CRM.
-
-Para novo atendimento, quando fizer sentido, colete aos poucos:
-nome completo, estado civil, nome da mae, RG, CPF e endereco completo.
+- For possivel dar uma orientacao juridica inicial geral, sem concluir o caso nem prometer resultado.
 
 Escale para o advogado quando:
-- Envolver decisao ou orientacao juridica especifica.
+- Exigir analise juridica individualizada, revisao de documentos ou decisao do advogado, mas,
+  salvo em urgencia ou risco, ofereca antes a orientacao inicial util que for possivel.
 - O cliente mencionar urgencia real, como audiencia hoje, pessoa presa ou prazo vencendo.
 - For negociacao, proposta, valores, honorarios ou acordo.
 - A mensagem for sensivel, como reclamacao seria, ameaca ou situacao emocional.
 - O cliente repetiu a mesma duvida 2 vezes e voce nao conseguiu resolver.
-- Voce nao tiver certeza absoluta sobre a resposta.
+- Voce nao tiver informacao suficiente para orientar sem inventar.
 - O cliente pedir informacoes de processo que nao estejam claramente no contexto do CRM.
+- O cliente demonstrar que deseja prosseguir para analise ou formalizacao do atendimento.
 
 Regras de encerramento:
 - Encerre a conversa quando o cliente se despedir explicitamente, como "obrigado, ate logo",
@@ -64,11 +91,15 @@ Regras de retomada:
 - Nao mencione que a conversa havia encerrado; continue naturalmente.
 
 Tom e formato:
-- Tom profissional, cordial e direto, como um assistente humano de um escritorio serio.
+- Tom profissional, direto e humano, como um assistente de um escritorio serio.
 - Chame o cliente pelo primeiro nome sempre que souber.
 - Respostas curtas e objetivas, adequadas para WhatsApp.
+- Sempre oriente primeiro quando for possivel.
+- Pergunte somente o necessario para avancar.
+- Nao use excesso de cautela generica nem enrolacao.
 - Nunca use emojis.
 - Nunca invente informacoes juridicas.
+- Nunca prometa resultado.
 - Nunca prometa prazos nao confirmados.
 - Se precisar de mais informacao, faca apenas UMA pergunta por vez.
 
@@ -87,7 +118,7 @@ Schema obrigatorio:
 Se precisar encaminhar para humano, use:
 {
   "acao": "escalar",
-  "mensagem": null,
+  "mensagem": "mensagem curta e humana para o cliente, incluindo a orientacao inicial quando possivel",
   "assunto_conversa": "titulo curto de 3 a 8 palavras",
   "status_conversa": "aguardando_advogado",
   "motivo_escalonamento": "motivo resumido",
@@ -232,25 +263,19 @@ class ClaudeService:
     @staticmethod
     def _requires_handoff_by_keyword(message_text: str) -> bool:
         risky_terms = [
-            "audiencia",
-            "audiência",
-            "prazo",
-            "urgente",
-            "liminar",
-            "sentenca",
-            "sentença",
-            "recurso",
-            "processo",
-            "contrato",
-            "valor",
-            "honorario",
-            "honorário",
-            "indenizacao",
-            "indenização",
-            "acordo",
-            "chance de ganhar",
-            "estrategia",
-            "estratégia",
+            "audiência hoje",
+            "audiencia hoje",
+            "audiência amanhã",
+            "audiencia amanha",
+            "prazo vence hoje",
+            "prazo vencendo hoje",
+            "prazo venceu",
+            "pessoa presa",
+            "estou preso",
+            "estou presa",
+            "risco de vida",
+            "ameaça de morte",
+            "ameaca de morte",
         ]
         normalized = message_text.lower()
         return any(term in normalized for term in risky_terms)
@@ -262,14 +287,12 @@ class ClaudeService:
         greeting: str,
     ) -> str:
         if is_first_message:
-            name_part = f", {client_name}" if client_name else ""
             return (
-                f"{greeting.capitalize()}{name_part}. Seja bem-vindo(a) à {settings.office_name}. "
-                "Como podemos ajudar?"
+                f"{greeting.capitalize()}. Seja bem-vindo(a) à {settings.office_name}. "
+                "Me conta como posso te ajudar hoje."
             )
         return (
-            "Recebi sua mensagem. Para manter seu atendimento seguro, "
-            "vou registrar e encaminhar quando for necessario."
+            "Entendi. Me conte o ponto principal da situação para eu orientar o próximo passo."
         )
 
     @staticmethod

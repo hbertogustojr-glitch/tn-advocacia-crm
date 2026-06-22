@@ -165,6 +165,17 @@ class AttendanceService:
             )
 
         if decision.action == "handoff":
+            reply_text = decision.reply_text if settings.auto_reply_enabled else None
+            if reply_text:
+                self.repository.create_message(
+                    conversation_id=conversation.id,
+                    provider=payload.provider,
+                    external_message_id=None,
+                    direction="outbound",
+                    sender_type="ai",
+                    body=reply_text,
+                    sent_at=datetime.now(timezone.utc),
+                )
             conversation.status = "waiting_human"
             self.repository.create_handoff(
                 conversation_id=conversation.id,
@@ -175,6 +186,7 @@ class AttendanceService:
             return WhatsAppAutomationResult(
                 conversation_id=conversation.id,
                 action="handoff",
+                reply_text=reply_text,
                 handoff_reason=decision.handoff_reason,
             )
 

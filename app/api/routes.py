@@ -82,7 +82,8 @@ async def receive_meta_whatsapp_webhook(
             result.handoffs_created += 1
             if settings.meta_send_handoff_ack:
                 try:
-                    meta_service.send_text_message(message.phone_number, meta_service.handoff_ack_text())
+                    handoff_text = automation.reply_text or meta_service.handoff_ack_text()
+                    meta_service.send_text_message(message.phone_number, handoff_text)
                     result.replies_sent += 1
                 except Exception as exc:
                     result.errors.append(f"conversation {automation.conversation_id}: {exc}")
@@ -145,7 +146,8 @@ async def _process_evolution_webhook(
             result.handoffs_created += 1
             if settings.evolution_send_handoff_ack:
                 try:
-                    evolution_service.send_text_message(message.phone_number, evolution_service.handoff_ack_text())
+                    handoff_text = automation.reply_text or evolution_service.handoff_ack_text()
+                    evolution_service.send_text_message(message.phone_number, handoff_text)
                     result.replies_sent += 1
                 except Exception as exc:
                     result.errors.append(f"conversation {automation.conversation_id}: {exc}")
