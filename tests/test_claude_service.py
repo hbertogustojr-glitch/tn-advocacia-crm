@@ -29,3 +29,12 @@ def test_prompt_prioritizes_orientation_and_minimal_questions() -> None:
     assert "Faca apenas UMA pergunta por mensagem" in LEGAL_SYSTEM_PROMPT
     assert "Nao peca CPF, RG, endereco completo" in LEGAL_SYSTEM_PROMPT
     assert "nao diga que um contrato ja foi fechado" in LEGAL_SYSTEM_PROMPT
+
+
+def test_prompt_identifies_related_rights_and_judicial_paths() -> None:
+    normalized_prompt = " ".join(LEGAL_SYSTEM_PROMPT.split())
+
+    assert "outros direitos" in normalized_prompt
+    assert "podem ser cobrados judicialmente" in normalized_prompt
+    assert "fundamentar um pedido de rescisao indireta" in normalized_prompt
+    assert 'resolvido "administrativamente"' in normalized_prompt
