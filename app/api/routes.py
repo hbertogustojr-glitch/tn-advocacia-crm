@@ -15,6 +15,7 @@ from app.schemas.whatsapp import WhatsAppInboundPayload, WhatsAppAutomationResul
 from app.services.attendance_service import AttendanceService
 from app.services.evolution_service import EvolutionService
 from app.services.followup_service import FollowUpService
+from app.services.document_service import DocumentService
 from app.services.meta_whatsapp_service import MetaWhatsAppService
 
 
@@ -123,6 +124,24 @@ async def _process_evolution_webhook(
         handoffs_created=0,
     )
     for message in messages:
+        if message.message_type in {"document", "image"}:
+            media_base64 = message.media_base64
+            if not media_base64:
+                try:
+                    media_base64 = evolution_service.get_media_base64(message.external_message_id)
+                except Exception as exc:
+                    result.errors.append(f"media {message.external_message_id}: {exc}")
+            document_context = DocumentService().analyze(
+                media_base64=media_base64,
+                mimetype=message.media_mimetype,
+                filename=message.media_filename,
+            )
+            caption = message.message_text if message.message_text != "Arquivo enviado pelo cliente." else ""
+            message.message_text = DocumentService.context_message(
+                filename=message.media_filename,
+                caption=caption,
+                analysis=document_context,
+            )
         inbound = WhatsAppInboundPayload(
             provider=message.provider,
             organization_id=settings.default_organization_id,
@@ -131,6 +150,7 @@ async def _process_evolution_webhook(
             contact_name=message.contact_name,
             external_message_id=message.external_message_id,
             message_text=message.message_text,
+            message_type=message.message_type,
             sent_at=message.sent_at,
         )
         automation = attendance_service.handle_inbound_whatsapp(inbound)

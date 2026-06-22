@@ -93,6 +93,7 @@ class AttendanceRepository:
         sender_type: str,
         body: str,
         sent_at: datetime,
+        message_type: str = "text",
     ) -> Message:
         message = Message(
             conversation_id=conversation_id,
@@ -100,7 +101,7 @@ class AttendanceRepository:
             external_message_id=external_message_id,
             direction=direction,
             sender_type=sender_type,
-            message_type="text",
+            message_type=message_type,
             body=body,
             sent_at=sent_at,
         )
@@ -338,6 +339,15 @@ class AttendanceRepository:
         conversation = self.get_conversation(conversation_id)
         if conversation:
             conversation.status = "closed"
+            open_handoffs = self.db.scalars(
+                select(HandoffRequest).where(
+                    HandoffRequest.conversation_id == conversation_id,
+                    HandoffRequest.status == "open",
+                )
+            ).all()
+            for handoff in open_handoffs:
+                handoff.status = "resolved"
+                handoff.resolved_at = datetime.now()
             self.db.flush()
         return conversation
 
@@ -357,6 +367,22 @@ class AttendanceRepository:
         stmt = (
             select(Message)
             .where(Message.conversation_id == conversation_id)
+            .order_by(desc(Message.created_at), desc(Message.id))
+            .limit(limit)
+        )
+        return list(reversed(self.db.scalars(stmt).all()))
+
+    def list_recent_document_messages(
+        self,
+        conversation_id: int,
+        limit: int = 2,
+    ) -> list[Message]:
+        stmt = (
+            select(Message)
+            .where(
+                Message.conversation_id == conversation_id,
+                Message.message_type.in_(["document", "image"]),
+            )
             .order_by(desc(Message.created_at), desc(Message.id))
             .limit(limit)
         )
@@ -386,7 +412,9 @@ class AttendanceRepository:
             handoff.resolved_at = datetime.now()
             conversation = self.get_conversation(handoff.conversation_id)
             if conversation and conversation.status == "waiting_human":
-                conversation.status = "closed"
+                # The human finished this attendance, but the WhatsApp conversation
+                # remains available so the client can return with another question.
+                conversation.status = "bot_active"
             self.db.flush()
         return handoff
 

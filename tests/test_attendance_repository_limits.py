@@ -5,6 +5,20 @@ from app.repositories.attendance_repository import AttendanceRepository
 
 
 class AttendanceRepositoryLimitTests(unittest.TestCase):
+    def test_resolving_handoff_reactivates_bot(self) -> None:
+        db = Mock()
+        handoff = Mock(status="open", conversation_id=12)
+        conversation = Mock(status="waiting_human")
+        db.get.return_value = handoff
+        repository = AttendanceRepository(db)
+        repository.get_conversation = Mock(return_value=conversation)
+
+        repository.resolve_handoff(3)
+
+        self.assertEqual(handoff.status, "resolved")
+        self.assertEqual(conversation.status, "bot_active")
+        db.flush.assert_called_once_with()
+
     def test_ai_decision_reason_is_limited_to_database_capacity(self) -> None:
         db = Mock()
         repository = AttendanceRepository(db)

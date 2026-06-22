@@ -50,6 +50,7 @@ class AttendanceService:
             sender_type="client",
             body=payload.message_text,
             sent_at=payload.sent_at,
+            message_type=payload.message_type,
         )
         self._update_conversation_subject(
             conversation,
@@ -254,6 +255,12 @@ class AttendanceService:
 
     def _recent_history(self, conversation_id: int) -> str:
         messages = self.repository.list_recent_messages(conversation_id)
+        document_messages = self.repository.list_recent_document_messages(conversation_id)
+        known_ids = {message.id for message in messages}
+        messages = sorted(
+            [*messages, *(message for message in document_messages if message.id not in known_ids)],
+            key=lambda message: (message.created_at, message.id),
+        )
         if not messages:
             return "Sem historico recente."
         lines = []

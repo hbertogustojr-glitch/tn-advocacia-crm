@@ -12,6 +12,7 @@ class WhatsAppInboundPayload(BaseModel):
     contact_name: str | None = Field(default=None, max_length=180)
     external_message_id: str | None = Field(default=None, max_length=160)
     message_text: str = Field(min_length=1)
+    message_type: str = Field(default="text", max_length=24)
     sent_at: datetime
 
 

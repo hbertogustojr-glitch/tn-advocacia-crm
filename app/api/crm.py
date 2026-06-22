@@ -1266,6 +1266,11 @@ def crm_conversation_detail(
         for message in messages
     )
     close_action = ""
+    resume_action = ""
+    if conversation.status == "waiting_human":
+        resume_action = """
+        <p class="muted">Enquanto esta pendencia estiver aberta, o bot permanece pausado.</p>
+        """
     if conversation.status != "closed":
         close_action = f"""
         <form method="post" action="/crm/conversas/{conversation.id}/encerrar">
@@ -1301,7 +1306,7 @@ def crm_conversation_detail(
                     <div class="detail-row"><span>Criada em</span><strong>{_dt(conversation.created_at)}</strong></div>
                     <div class="detail-row"><span>Atualizada em</span><strong>{_dt(conversation.updated_at)}</strong></div>
                 </div>
-                <div class="actions">{close_action}<a class="button secondary" href="/crm/conversas">Voltar</a></div>
+                {resume_action}<div class="actions">{close_action}<a class="button secondary" href="/crm/conversas">Voltar</a></div>
             </aside>
         </div>
         """
@@ -1699,8 +1704,8 @@ def _pending_row(item: dict, return_to: str = "/crm/pendencias", lawyers: list |
         resolve_url = f"/crm/pendencias/handoffs/{item['id']}/resolver?return_to={escape(return_to)}"
         action_html += f"""
         <form method="post" action="{resolve_url}" style="display:inline;"
-              onsubmit="return confirm('Confirmar que esta pendencia foi resolvida?');">
-            <button type="submit">Marcar resolvido</button>
+              onsubmit="return confirm('Concluir o atendimento humano e reativar o bot para novas duvidas?');">
+            <button type="submit">Concluir e reativar bot</button>
         </form>
         """
     return f"""
