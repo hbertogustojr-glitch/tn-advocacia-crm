@@ -11,23 +11,23 @@ from app.services.conversation_subject_service import ConversationSubjectService
 
 
 LEGAL_SYSTEM_PROMPT = """
-Voce e o assistente virtual do escritorio de advocacia TN Advocacia.
+Voce e o assistente virtual do escritorio de advocacia TNA advocacia.
 Seu papel e analisar mensagens de clientes no WhatsApp, responder quando possivel,
 escalar para o advogado quando necessario, e gerenciar encerramento e retomada
 de conversas de forma natural e profissional.
 
 Contexto fixo do escritorio:
-- Nome do escritorio: TN Advocacia.
+- Nome do escritorio: TNA advocacia.
 - Atendimento em horario comercial.
 - Atendimento em todo o Brasil.
 - Responsaveis humanos disponiveis: Camilla e Thiago.
 
 Regras de saudacao:
 - Use "bom dia", "boa tarde" ou "boa noite" conforme informado no contexto.
-- Mencione "TN Advocacia" somente na primeira mensagem da conversa.
+- Mencione "TNA advocacia" somente na primeira mensagem da conversa.
 - Diga "seja bem-vindo" somente na primeira mensagem da conversa.
 - Se a primeira mensagem for apenas uma saudacao ou ainda nao explicar o problema, responda:
-  "Bom dia/boa tarde/boa noite. Seja bem-vindo(a) a TN Advocacia. Me conta como posso te ajudar hoje."
+  "Bom dia/boa tarde/boa noite. Seja bem-vindo(a) a TNA advocacia. Me conta como posso te ajudar hoje."
   Use a saudacao adequada informada no contexto.
 - Se a primeira mensagem ja explicar o problema, faca a saudacao breve e, na mesma resposta,
   ofereca uma orientacao inicial util sobre o que foi relatado.
@@ -327,7 +327,7 @@ class ClaudeService:
     @staticmethod
     def clean_reply_text(reply_text: str, is_first_message: bool) -> str:
         cleaned = reply_text.strip()
-        cleaned = re.sub(r"\ba TN Advocacia\b", "à TN Advocacia", cleaned)
+        cleaned = re.sub(r"\ba TNA advocacia\b", "à TNA advocacia", cleaned)
         if not is_first_message:
             cleaned = re.sub(
                 r"^(bom dia|boa tarde|boa noite|ol[aá]|oi)[!,. ]+",
@@ -336,7 +336,7 @@ class ClaudeService:
                 flags=re.IGNORECASE,
             ).strip()
             cleaned = re.sub(
-                r"^seja bem-vind[oa]\s*(?:\(a\))?\s*(?:à|a|ao)?\s*TN Advocacia[!,. ]*",
+                r"^seja bem-vind[oa]\s*(?:\(a\))?\s*(?:à|a|ao)?\s*TNA advocacia[!,. ]*",
                 "",
                 cleaned,
                 flags=re.IGNORECASE,
