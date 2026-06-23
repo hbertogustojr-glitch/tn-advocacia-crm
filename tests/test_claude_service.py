@@ -9,7 +9,7 @@ def test_new_client_fallback_uses_requested_welcome() -> None:
     )
 
     assert reply == (
-        "Bom dia. Seja bem-vindo(a) à TN Advocacia. "
+        "Bom dia. Seja bem-vindo(a) à TNA advocacia. "
         "Me conta como posso te ajudar hoje."
     )
 
