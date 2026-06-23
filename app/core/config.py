@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     app_name: str = "Legal WhatsApp Assistant"
     app_env: str = "local"
-    office_name: str = "TN Advocacia"
+    office_name: str = "TNA advocacia"
     local_timezone: str = "America/Maceio"
     database_url: str = "mysql+pymysql://user:password@localhost:3306/legal_assistant"
     anthropic_api_key: str | None = None
