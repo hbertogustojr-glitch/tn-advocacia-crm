@@ -17,7 +17,7 @@ Cadastre no servico `app`:
 
 ```env
 APP_ENV=production
-OFFICE_NAME=TNA advocacia
+OFFICE_NAME=TN advocacia
 LOCAL_TIMEZONE=America/Maceio
 DATABASE_URL=${{MySQL.MYSQL_URL}}
 ANTHROPIC_API_KEY=CHAVE_NOVA_DO_CLAUDE
