@@ -1,9 +1,11 @@
 import sys
 import hashlib
 import os
+import time
 from pathlib import Path
 
 from sqlalchemy import inspect, select, text
+from sqlalchemy.exc import OperationalError
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
@@ -100,4 +102,20 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    last_error: Exception | None = None
+
+    for attempt in range(1, 31):
+        try:
+            main()
+            break
+        except OperationalError as exc:
+            last_error = exc
+            wait_seconds = min(attempt * 2, 15)
+            print(
+                f"Database is not ready yet "
+                f"(attempt {attempt}/30). Retrying in {wait_seconds}s..."
+            )
+            time.sleep(wait_seconds)
+    else:
+        assert last_error is not None
+        raise last_error
